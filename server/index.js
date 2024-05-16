@@ -10,15 +10,16 @@ const app = express();
 
 const admin = require("firebase-admin");
 
-// CORS configuration
+// Serve static files from the 'public' directory
 const corsOptions = {
   origin: 'https://stu-dash-azure.vercel.app', // Replace with the allowed origin
-  optionsSuccessStatus: 200 // Some legacy browsers choke on 204
+  optionsSuccessStatus: 200,
+  methods: "GET,OPTIONS,PATCH,DELETE,POST,PUT",
+  allowedHeaders: "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version",
+  credentials: true
 };
 
 app.use(cors(corsOptions));
-
-// Serve static files from the 'public' directory
 app.use(express.static("public"));
 
 // Initialize Firebase Admin SDK
@@ -46,6 +47,7 @@ app.post("/upload", upload.single("file"), (req, res) => {
     // Read the uploaded CSV file
     const filePath = path.join(__dirname, req.file.path);
     const jsonData = [];
+//check
     fs.createReadStream(filePath)
       .pipe(csv())
       .on("data", (row) => {
