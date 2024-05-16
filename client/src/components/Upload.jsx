@@ -21,7 +21,7 @@ const UploadCSV = () => {
 
     try {
       const response = await axios.post(
-        "https://studash.vercel.app/upload",
+        "https://studash.onrender.com/upload",
         formData,
         {
           headers: {
