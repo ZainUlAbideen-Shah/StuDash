@@ -21,7 +21,7 @@ const UploadCSV = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:3000/upload",
+        "https://studash.vercel.app/upload",
         formData,
         {
           headers: {
