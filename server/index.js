@@ -11,7 +11,16 @@ const app = express();
 const admin = require("firebase-admin");
 
 // Serve static files from the 'public' directory
-app.use(cors());
+const options = [
+  cors({
+    origin: '*',
+    methods: '*',
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+  })
+];
+
+app.use(options);
 app.use(express.static("public"));
 
 // Initialize Firebase Admin SDK
