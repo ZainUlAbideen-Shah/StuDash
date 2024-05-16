@@ -10,6 +10,17 @@ const app = express();
 
 const admin = require("firebase-admin");
 
+// CORS configuration
+const corsOptions = {
+  origin: 'https://stu-dash-azure.vercel.app', // Replace with the allowed origin
+  optionsSuccessStatus: 200 // Some legacy browsers choke on 204
+};
+
+app.use(cors(corsOptions));
+
+// Serve static files from the 'public' directory
+app.use(express.static("public"));
+
 // Initialize Firebase Admin SDK
 const serviceAccount = require("./serviceAccountKey.json"); // Path to your service account key JSON file
 admin.initializeApp({
@@ -19,16 +30,6 @@ admin.initializeApp({
 
 // Get a reference to the Firestore database
 const db = admin.firestore();
-
-// Use CORS middleware with appropriate options
-app.use(cors({
-  origin: "https://stu-dash-azure.vercel.app", // Replace with your client app's URL
-  methods: "GET,POST,PUT,DELETE,OPTIONS",
-  allowedHeaders: "Content-Type,Authorization"
-}));
-
-// Serve static files from the 'public' directory
-app.use(express.static("public"));
 
 app.get("/", (req, res) => {
   res.json({ message: "working" });
@@ -45,7 +46,6 @@ app.post("/upload", upload.single("file"), (req, res) => {
     // Read the uploaded CSV file
     const filePath = path.join(__dirname, req.file.path);
     const jsonData = [];
-    
     fs.createReadStream(filePath)
       .pipe(csv())
       .on("data", (row) => {
@@ -63,6 +63,9 @@ app.post("/upload", upload.single("file"), (req, res) => {
         );
         fs.writeFileSync(jsonFilePath, JSON.stringify(jsonData, null, 2));
 
+        /// jsonData
+
+        // send this data to firebase
         // Push jsonData to Firebase Firestore
         db.collection("data")
           .doc("jsonDataDocument")
