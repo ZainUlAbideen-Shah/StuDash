@@ -52,7 +52,7 @@ app.post("/upload", upload.single("file"), (req, res) => {
         // Write the JSON data to a file
         const jsonFilePath = path.join(
           __dirname,
-          "uploads",
+          "tmp",
           `${req.file.filename}.json`
         );
         fs.writeFileSync(jsonFilePath, JSON.stringify(jsonData, null, 2));
