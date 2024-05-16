@@ -1,6 +1,6 @@
 const express = require("express");
 const multer = require("multer");
-const upload = multer({ dest: "uploads/" });
+const upload = multer({ dest: "tmp/" });
 const csv = require("csv-parser");
 const fs = require("fs");
 const path = require("path");
@@ -11,7 +11,16 @@ const app = express();
 const admin = require("firebase-admin");
 
 // Serve static files from the 'public' directory
-app.use(cors());
+const options = [
+  cors({
+    origin: '*',
+    methods: '*',
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+  })
+];
+
+app.use(options);
 app.use(express.static("public"));
 
 // Initialize Firebase Admin SDK
@@ -39,7 +48,7 @@ app.post("/upload", upload.single("file"), (req, res) => {
     // Read the uploaded CSV file
     const filePath = path.join(__dirname, req.file.path);
     const jsonData = [];
-
+//check
     fs.createReadStream(filePath)
       .pipe(csv())
       .on("data", (row) => {
@@ -52,7 +61,7 @@ app.post("/upload", upload.single("file"), (req, res) => {
         // Write the JSON data to a file
         const jsonFilePath = path.join(
           __dirname,
-          "uploads",
+          "tmp",
           `${req.file.filename}.json`
         );
         fs.writeFileSync(jsonFilePath, JSON.stringify(jsonData, null, 2));
