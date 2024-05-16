@@ -42,7 +42,9 @@ const GetData = () => {
 
     // Call the fetchJsonData function when component mounts
     fetchJsonData();
-  }, [jsonData]); // Empty dependency array ensures useEffect runs only once
+  }, []); // Empty dependency array ensures useEffect runs only once
+
+  useEffect(() => {}, [jsonData]);
 
   return (
     <div>
