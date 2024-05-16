@@ -11,15 +11,7 @@ const app = express();
 const admin = require("firebase-admin");
 
 // Serve static files from the 'public' directory
-const corsOptions = {
-  origin: 'https://stu-dash-azure.vercel.app', // Replace with the allowed origin
-  optionsSuccessStatus: 200,
-  methods: "GET,OPTIONS,PATCH,DELETE,POST,PUT",
-  allowedHeaders: "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version",
-  credentials: true
-};
-
-app.use(cors(corsOptions));
+app.use(cors());
 app.use(express.static("public"));
 
 // Initialize Firebase Admin SDK
