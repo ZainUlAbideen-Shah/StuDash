@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { getFirestore, doc, getDoc } from "firebase/firestore";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  onSnapshot,
+  updateDoc,
+} from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 
 // Initialize Firebase
@@ -22,38 +28,126 @@ const firestore = getFirestore(app);
 
 const GetData = () => {
   const [jsonData, setJsonData] = useState([]);
+  const [isEditing, setIsEditing] = useState(null);
+  const [editData, setEditData] = useState({});
 
   useEffect(() => {
-    // Function to fetch JSON data from Firestore
-    const fetchJsonData = async () => {
-      try {
-        const dataRef = doc(firestore, "data", "jsonDataDocument");
-        const docSnap = await getDoc(dataRef);
-        if (docSnap.exists()) {
-          // If document exists, extract JSON data
-          setJsonData(docSnap.data().data);
-        } else {
-          console.log("No such document!");
-        }
-      } catch (error) {
-        console.error("Error fetching document:", error);
+    const dataRef = doc(firestore, "data", "jsonDataDocument");
+
+    // Real-time listener for Firestore data
+    const unsubscribe = onSnapshot(dataRef, (docSnap) => {
+      if (docSnap.exists()) {
+        // If document exists, extract JSON data
+        setJsonData(docSnap.data().data);
+      } else {
+        console.log("No such document!");
       }
-    };
+    });
 
-    // Call the fetchJsonData function when component mounts
-    fetchJsonData();
-  }, []); // Empty dependency array ensures useEffect runs only once
+    // Cleanup listener on component unmount
+    return () => unsubscribe();
+  }, []);
 
-  useEffect(() => {}, [jsonData]);
+  const handleEditClick = (index) => {
+    setIsEditing(index);
+    setEditData(jsonData[index]);
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditData({ ...editData, [name]: value });
+  };
+
+  const handleEditSave = async (index) => {
+    const updatedData = [...jsonData];
+    updatedData[index] = editData;
+
+    try {
+      const dataRef = doc(firestore, "data", "jsonDataDocument");
+      await updateDoc(dataRef, { data: updatedData });
+      setJsonData(updatedData);
+      setIsEditing(null);
+    } catch (error) {
+      console.error("Error updating document:", error);
+    }
+  };
+
+  const handleDelete = async (index) => {
+    const updatedData = jsonData.filter((_, i) => i !== index);
+
+    try {
+      const dataRef = doc(firestore, "data", "jsonDataDocument");
+      await updateDoc(dataRef, { data: updatedData });
+      setJsonData(updatedData);
+    } catch (error) {
+      console.error("Error deleting document:", error);
+    }
+  };
+
+  const orderedKeys = ["name", "id", "age", "gender", "language.grade"];
+
+  const renderTableHeader = () => {
+    return (
+      <thead>
+        <tr>
+          {orderedKeys.map((key) => (
+            <th key={key}>{key}</th>
+          ))}
+          <th>Actions</th>
+        </tr>
+      </thead>
+    );
+  };
+
+  const renderTableBody = (data) => {
+    return (
+      <tbody>
+        {data.map((item, index) => (
+          <tr key={index}>
+            {orderedKeys.map((key, i) => (
+              <td key={i}>
+                {isEditing === index ? (
+                  <input
+                    type="text"
+                    name={key}
+                    value={editData[key] || ""}
+                    onChange={handleEditChange}
+                  />
+                ) : (
+                  JSON.stringify(item[key])
+                )}
+              </td>
+            ))}
+            <td>
+              {isEditing === index ? (
+                <>
+                  <button onClick={() => handleEditSave(index)}>Save</button>
+                  <button onClick={() => setIsEditing(null)}>Cancel</button>
+                </>
+              ) : (
+                <>
+                  <button onClick={() => handleEditClick(index)}>Edit</button>
+                  <button onClick={() => handleDelete(index)}>Delete</button>
+                </>
+              )}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    );
+  };
 
   return (
     <div>
       <h1>JSON Data from Firestore</h1>
-      <ul>
-        {jsonData.map((item, index) => (
-          <li key={index}>{JSON.stringify(item)}</li>
-        ))}
-      </ul>
+      {jsonData.length > 0 ? (
+        <table>
+          {renderTableHeader()}
+          {renderTableBody(jsonData)}
+        </table>
+      ) : (
+        <p>No data available</p>
+      )}
     </div>
   );
 };
